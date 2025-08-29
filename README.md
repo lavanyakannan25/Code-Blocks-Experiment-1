@@ -26,46 +26,52 @@ Add: netproto and pthread
 7. 	Choose the file and verify the Go-Back-N protocol operation.
 
 💻 Program
-
+```
 #include <stdio.h>
-
-#define window_size 4  // Assume 7 frames of data are to be sent using Go-Back-N ARQ
-
-void main() {
-
-    int i, window_start = 1, ack;
-    
-    int n;
-
+#include <string.h>
+#define WINDOW_SIZE 4
+#define MAX_FRAMES 100
+#define FRAME_LEN  20
+int main() {
+    int n, i, ack;
+    int window_start = 1;
+    char frame[MAX_FRAMES + 1][FRAME_LEN];
     printf("SLIDING WINDOW PROTOCOL\n");
-    scanf("%d", &n);
-    printf("GO BACK N ARQ\n");
-    printf("Enter the number of frames: %d\n", n);
-
-    char frame[n + 1][10];
-
+    printf("Enter the number of frames to send (max %d): ", MAX_FRAMES);
+    if (scanf("%d", &n) != 1) return 0;
+    if (n < 1 || n > MAX_FRAMES) {
+        printf("Invalid number of frames.\n");
+        return 0;
+    }
     for (i = 1; i <= n; i++) {
         printf("Content for frame %d: ", i);
-        scanf("%s", frame[i]);
+        scanf("%19s", frame[i]);
     }
-
     while (window_start <= n) {
-        printf("\nSending frames:\n");
-        scanf("%d", &ack);
-        printf("Enter frame number with no ACKs: %d\n", ack);
+        printf("\nSending frames: ");
+        for (i = window_start; i < window_start + WINDOW_SIZE && i <= n; i++) {
+            printf("Frame %d ", i);
+        }
+        printf("\nEnter frame number with no ACK (or 0 for all ACK): ");
+        if (scanf("%d", &ack) != 1) break;
 
         if (ack == 0) {
-            printf("No ACK received, moving window forward\n");
-            window_start += window_size;
+            printf("All frames acknowledged. Moving window forward.\n");
+            window_start += WINDOW_SIZE;
+        } else if (ack >= window_start && ack <= n) {
+            printf("No acknowledgement for frame %d.\n", ack);
+            printf("Resending frames starting from frame %d:\n", ack);
+            window_start = ack;  // go back to that frame
         } else {
-            printf("No Acknowledgement for frame %d...\n", ack);
-            printf("Resending frames starting from frame %d\n", ack);
-            window_start = ack;
+            printf("Invalid ACK number. Try again.\n");
         }
     }
 
     printf("\nAll frames sent successfully.\n");
+    return 0;
 }
+```
+
 🖥️ Sample Output
 <img width="1210" height="984" alt="code block 1" src="https://github.com/user-attachments/assets/e8e4b6d8-7bb3-454e-8e02-6349c08a432a" />
 
